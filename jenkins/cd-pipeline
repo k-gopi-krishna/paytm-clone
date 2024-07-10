@@ -1,0 +1,38 @@
+pipeline {
+    agent any
+    
+
+    stages {
+        stage('Checkout') {
+      steps {
+        sh 'echo passed'
+        git branch: 'main', url: 'https://github.com/k-gopi-krishna/paytm-clone-argo'
+      }
+    }
+        
+    stage('Update Deployment File') {
+      environment {
+        GIT_REPO_NAME = "paytm-clone-argo"
+        TARGET_BRANCH = "main"
+        GIT_USER_NAME = "k-gopi-krishna"
+      }
+      steps {
+        withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+          sh '''
+            git config user.email "kondajigopi1@gmail.com"
+            git config user.name "k-gopi-krishna"
+            export BUILD_N=${BUILD_NUMBER}
+            echo ${BUILD_N}
+
+            sed -i "s/\\(image: \\).*/\\1gopikondaji\\/frontend:${BUILD_N}/" k8s/frontend-deploy.yaml
+            sed -i "s/\\(image: \\).*/\\1gopikondaji\\/backend:${BUILD_N}/" k8s/backend-deploy.yaml
+
+            git add k8s/frontend-deploy.yaml k8s/backend-deploy.yaml
+            git commit -m "Update deployment image to version ${BUILD_NUMBER}"
+            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/paytm-clone-argo HEAD:main
+          '''
+        }
+      }
+    }
+    }
+}
