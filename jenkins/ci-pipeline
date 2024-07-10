@@ -1,0 +1,52 @@
+pipeline {
+  agent any
+  stages {
+    stage('Checkout') {
+      steps {
+        sh 'echo passed'
+        git branch: 'main', url: 'https://github.com/k-gopi-krishna/paytm-clone'
+      }
+    }
+    stage('Build and Test') {
+      steps {
+        // sh 'ls -ltr'
+        // Build the project and create a JAR file
+        sh '''
+          cd frontend && npm install && docker build -t gopikondaji/frontend . 
+          cd ../backend && npm install && docker build -t gopikondaji/backend .
+        '''
+        // sh 'npm test' commented because no tests were written by the developer (Note: I didn't build this application)
+      }
+    }
+    stage('Push Docker Image') {
+      environment {
+        DOCKER_FRONTEND = "gopikondaji/frontend"
+        DOCKER_BACKEND = "gopikondaji/backend"
+        REGISTRY_CREDENTIALS = credentials('docker')
+      }
+      steps {
+        script {
+          sh '''
+            cd frontend && docker build -t ${DOCKER_FRONTEND}:${BUILD_NUMBER} . 
+            cd ../backend && docker build -t ${DOCKER_BACKEND}:${BUILD_NUMBER} .
+          '''
+          def dockerImage1 = docker.image("${DOCKER_FRONTEND}:${BUILD_NUMBER}")
+          def dockerImage2 = docker.image("${DOCKER_BACKEND}:${BUILD_NUMBER}")
+          docker.withRegistry('https://index.docker.io/v1/', "docker") {
+            dockerImage1.push()
+            dockerImage2.push()
+          }
+        }
+      }
+    }
+    stage('Triggering CD Pipeline'){
+        steps{
+            build job: "cd-pipeline", wait: true
+        }
+        
+    }
+    
+   
+   
+  }
+}
