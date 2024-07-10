@@ -1,0 +1,10 @@
+project: default
+source:
+  repoURL: 'https://github.com/k-gopi-krishna/paytm-clone-argo'
+  path: k8s
+  targetRevision: HEAD
+destination:
+  server: 'https://kubernetes.default.svc'
+  namespace: default
+syncPolicy:
+  automated: {}
