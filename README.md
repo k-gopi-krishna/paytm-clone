@@ -80,8 +80,6 @@ CD Pipeline: Defined in cd-pipeline.
 ArgoCD
 ArgoCD is used for continuous deployment. The ArgoCD configuration is located in the argo.yaml file.
 
-License
-This project is licensed under the MIT License. See the LICENSE file for details.
 
 Acknowledgements
 React
